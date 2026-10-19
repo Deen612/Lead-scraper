@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 1080px; height: 1920px; overflow: hidden; background: #fff; }
+      :root { --y: #f6b80b; --ink: #111214; --blue: #0a84ff; --grey: #e9e9eb; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden;
+        font-family: Inter, system-ui, sans-serif; color: var(--ink); }
+      .clip { position: absolute; inset: 0; }
+      .scene { overflow: hidden; }
+
+      /* ---------- S1 chat ---------- */
+      #s1 { background: #fff; }
+      #s1 .head { position: absolute; top: 0; left: 0; right: 0; height: 300px; background: rgba(248,248,250,.96);
+        border-bottom: 1px solid #e5e5ea; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 26px; }
+      #s1 .status { position: absolute; top: 34px; left: 70px; right: 70px; display: flex; justify-content: space-between; font-weight: 600; font-size: 34px; }
+      #s1 .avatar { width: 112px; height: 112px; border-radius: 50%; background: linear-gradient(#a2a8b4, #7c828e);
+        color: #fff; font-size: 52px; font-weight: 600; display: grid; place-items: center; }
+      #s1 .name { font-size: 28px; margin-top: 12px; color: #333; }
+      #thread { position: absolute; left: 0; right: 0; top: 420px; padding: 0 44px; transform-origin: 80% 70%; }
+      .row { display: flex; margin-bottom: 18px; }
+      .row.out { justify-content: flex-end; }
+      .bub { max-width: 820px; padding: 30px 42px; border-radius: 50px; font-size: 52px; line-height: 1.22; letter-spacing: -.01em; }
+      .out .bub { background: var(--blue); color: #fff; border-bottom-right-radius: 14px; }
+      .in .bub { background: var(--grey); color: #000; border-bottom-left-radius: 14px; }
+      .photo { width: 640px; height: 480px; border-radius: 40px; overflow: hidden; }
+      .photo img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+      .typing { background: var(--grey); border-radius: 40px; padding: 30px 36px; display: flex; gap: 12px; }
+      .typing i { width: 20px; height: 20px; border-radius: 50%; background: #8e8e93; display: block; }
+      .hero.bub { background: var(--y); color: var(--ink); font-weight: 700; display: flex; align-items: center; gap: 22px; font-size: 50px; }
+      .hero img { height: 92px; }
+      #s1 .ts { text-align: center; color: #8e8e93; font-size: 26px; margin-bottom: 26px; }
+      #wipe { position: absolute; width: 140px; height: 140px; border-radius: 50%; background: var(--y);
+        left: 760px; top: 1290px; }
+
+      /* ---------- S2 cards ---------- */
+      #s2 { background: var(--y); }
+      #s2 h2 { position: absolute; left: 70px; right: 70px; top: 150px; font-size: 92px; line-height: .98; font-weight: 800; letter-spacing: -.045em; }
+      .card { position: absolute; width: 470px; background: #fff; border-radius: 34px; padding: 18px 18px 26px;
+        box-shadow: 0 30px 60px rgba(70,45,0,.28); }
+      .card img { width: 100%; height: 280px; object-fit: cover; border-radius: 22px; display: block; }
+      .card span { display: block; margin-top: 20px; padding-left: 8px; font-size: 36px; font-weight: 700; letter-spacing: -.02em; }
+
+      /* ---------- S3 map ---------- */
+      #s3 { background: #14161a; color: #fff; }
+      #mapwrap { position: absolute; inset: -60px; }
+      #mapwrap img { width: 1200px; height: 2040px; }
+      #s3 h2 { position: absolute; left: 70px; top: 150px; font-size: 92px; font-weight: 800; letter-spacing: -.045em; line-height: .98; }
+      #s3 h2 em { font-style: normal; color: var(--y); }
+      .pin { position: absolute; width: 0; height: 0; }
+      .pin .dot { position: absolute; left: -34px; top: -84px; width: 68px; height: 68px; border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg); background: var(--y); box-shadow: 0 10px 24px rgba(0,0,0,.5); }
+      .pin .dot::after { content: ""; position: absolute; inset: 22px; border-radius: 50%; background: var(--ink); }
+      .pin .lab { position: absolute; left: 50px; top: -96px; white-space: nowrap; background: #fff; color: var(--ink);
+        border-radius: 22px; padding: 18px 26px; box-shadow: 0 16px 40px rgba(0,0,0,.45); }
+      .pin .lab b { display: block; font-size: 38px; letter-spacing: -.02em; }
+      .pin .lab small { display: block; font-size: 24px; color: #666; margin-top: 4px; }
+      .pin.left .lab { left: auto; right: 50px; }
+      #set { position: absolute; left: 470px; top: 760px; }
+      #set .core { position: absolute; left: -18px; top: -18px; width: 36px; height: 36px; border-radius: 50%; background: #fff; border: 8px solid var(--blue); }
+      #set .ring { position: absolute; left: -60px; top: -60px; width: 120px; height: 120px; border-radius: 50%; border: 4px solid var(--blue); }
+      #set .tag { position: absolute; left: 34px; top: -22px; font-size: 30px; font-weight: 700; color: #fff; }
+      #routes { position: absolute; inset: 0; }
+
+      /* ---------- S4 end ---------- */
+      #s4 { background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+      #mark { width: 300px; height: 300px; }
+      #word { margin-top: 50px; font-size: 92px; font-weight: 800; letter-spacing: .12em; display: flex; }
+      #word span { display: inline-block; }
+      #tag { margin-top: 70px; font-size: 48px; text-align: center; line-height: 1.3; color: #444; letter-spacing: -.01em; }
+      #tag b { color: var(--ink); }
+      #bar { margin-top: 60px; width: 0; height: 10px; border-radius: 5px; background: var(--y); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="21" data-width="1080" data-height="1920">
+
+      <!-- S1: the problem, as a text thread -->
+      <div id="s1" class="clip scene" data-start="0" data-duration="6.6" data-track-index="0">
+        <div id="thread">
+          <div class="ts">Today 7:12 AM</div>
+          <div class="row out" id="m1"><div class="photo"><img src="assets/hollywood.jpg" alt="" /></div></div>
+          <div class="row out" id="m2"><div class="bub">Boss, the location is confirmed.</div></div>
+          <div class="row in" id="m3"><div class="bub">Great. Where do the trailers park?</div></div>
+          <div class="row in" id="m4"><div class="bub">And the grip truck. And 40 crew cars.</div></div>
+          <div class="row in" id="typ" style="display:none"><div class="typing"><i></i><i></i><i></i></div></div>
+          <div class="row out" id="m5"><div class="bub hero"><img src="assets/umbrella.png" alt="" />Curbstand's got us covered.</div></div>
+        </div>
+        <div class="head">
+          <div class="status"><span>9:41</span><span>●●● ▮</span></div>
+          <div class="avatar">N</div>
+          <div class="name">Nolan ›</div>
+        </div>
+        <div style="position:absolute;left:40px;right:40px;bottom:70px;height:96px;border:2px solid #d1d1d6;border-radius:48px;color:#a0a0a6;font-size:38px;padding:24px 36px">iMessage</div>
+        <div id="wipe"></div>
+      </div>
+
+      <!-- S2: what gets parked -->
+      <div id="s2" class="clip scene" data-start="6.2" data-duration="6.4" data-track-index="1">
+        <h2 id="s2h">Parking for the<br />whole production.</h2>
+        <div class="card" id="c1" style="left:60px; top:470px"><img src="assets/trailers.png" alt="" /><span>Trailers &amp; basecamp</span></div>
+        <div class="card" id="c2" style="left:550px; top:540px"><img src="assets/equip.png" alt="" /><span>Equipment trucks</span></div>
+        <div class="card" id="c3" style="left:60px; top:900px"><img src="assets/cast.png" alt="" /><span>Cast &amp; crew</span></div>
+        <div class="card" id="c4" style="left:550px; top:970px"><img src="assets/support.png" alt="" /><span>Support vehicles</span></div>
+        <div class="card" id="c5" style="left:300px; top:1400px"><img src="assets/lot.png" alt="" /><span>Full-lot rentals</span></div>
+      </div>
+
+      <!-- S3: lots near the set -->
+      <div id="s3" class="clip scene" data-start="12.4" data-duration="5.3" data-track-index="2">
+        <div id="mapwrap"><img src="assets/map.svg" alt="" /></div>
+        <svg id="routes" viewBox="0 0 1080 1920">
+          <path id="r1" d="M470 760 C420 640 330 600 290 560" stroke="#f6b80b" stroke-width="7" stroke-dasharray="4 14" stroke-linecap="round" fill="none" />
+          <path id="r2" d="M470 760 C520 860 560 930 640 1000" stroke="#f6b80b" stroke-width="7" stroke-dasharray="4 14" stroke-linecap="round" fill="none" />
+          <path id="r3" d="M470 760 C600 900 700 1150 790 1310" stroke="#f6b80b" stroke-width="7" stroke-dasharray="4 14" stroke-linecap="round" fill="none" />
+        </svg>
+        <div id="set"><div class="ring"></div><div class="core"></div><div class="tag">Your set</div></div>
+        <div class="pin" id="p1" style="left:290px; top:560px"><div class="dot"></div><div class="lab"><b>Cahuenga</b><small>Hollywood</small></div></div>
+        <div class="pin left" id="p2" style="left:640px; top:1000px"><div class="dot"></div><div class="lab"><b>Fairfax, Melrose &amp; Beverly</b><small>543 N Fairfax · 7250 Melrose · 8701 Beverly</small></div></div>
+        <div class="pin left" id="p3" style="left:790px; top:1310px"><div class="dot"></div><div class="lab"><b>Downtown Los Angeles</b><small>601 S Main · 801 S Grand · 846 San Julian</small></div></div>
+        <h2 id="s3h">Lots near<br /><em>your shoot.</em></h2>
+      </div>
+
+      <!-- S4: end card -->
+      <div id="s4" class="clip scene" data-start="17.5" data-duration="3.5" data-track-index="3">
+        <svg id="mark" viewBox="0 0 300 300">
+          <path id="arc" d="M210 40 H150 A110 110 0 0 0 150 260 H210" stroke="#f6b80b" stroke-width="34" stroke-linecap="round" fill="none" />
+          <g id="car" fill="#f6b80b">
+            <path d="M118 150 L132 116 Q136 108 146 108 H206 Q216 108 220 116 L234 150 Q246 152 246 166 V196 H106 V166 Q106 152 118 150Z" />
+            <rect x="140" y="120" width="72" height="28" rx="6" fill="#fff" />
+            <circle cx="136" cy="200" r="14" /><circle cx="216" cy="200" r="14" />
+            <circle cx="128" cy="172" r="9" fill="#fff" /><circle cx="224" cy="172" r="9" fill="#fff" />
+          </g>
+        </svg>
+        <div id="word"><span>C</span><span>U</span><span>R</span><span>B</span><span>S</span><span>T</span><span>A</span><span>N</span><span>D</span></div>
+        <div id="tag">Tell us where you're filming.<br /><b>We'll handle the parking.</b></div>
+        <div id="bar"></div>
+      </div>
+
+      <!-- sound -->
+      <audio id="a-bed" class="clip" data-start="0" data-duration="21" data-volume="0.32" data-fade-out="1.2" src="assets/sfx/bed.wav"></audio>
+      <audio id="a1" data-start="0.25" data-duration="0.2" data-volume="0.6" src="assets/sfx/send.wav"></audio>
+      <audio id="a2" data-start="0.95" data-duration="0.2" data-volume="0.6" src="assets/sfx/send.wav"></audio>
+      <audio id="a3" data-start="1.75" data-duration="0.45" data-volume="0.55" src="assets/sfx/receive.wav"></audio>
+      <audio id="a4" data-start="2.55" data-duration="0.45" data-volume="0.55" src="assets/sfx/receive.wav"></audio>
+      <audio id="a5" data-start="3.15" data-duration="0.6" data-volume="0.35" src="assets/sfx/typing.wav"></audio>
+      <audio id="a6" data-start="4.05" data-duration="0.2" data-volume="0.7" src="assets/sfx/send.wav"></audio>
+      <audio id="a7" data-start="5.7" data-duration="0.7" data-volume="0.8" src="assets/sfx/whoosh.wav"></audio>
+      <audio id="a8" data-start="7.0" data-duration="0.35" data-volume="0.8" src="assets/sfx/thud.wav"></audio>
+      <audio id="a9" data-start="7.55" data-duration="0.35" data-volume="0.8" src="assets/sfx/thud.wav"></audio>
+      <audio id="a10" data-start="8.1" data-duration="0.35" data-volume="0.8" src="assets/sfx/thud.wav"></audio>
+      <audio id="a11" data-start="8.65" data-duration="0.35" data-volume="0.8" src="assets/sfx/thud.wav"></audio>
+      <audio id="a12" data-start="9.2" data-duration="0.35" data-volume="0.85" src="assets/sfx/thud.wav"></audio>
+      <audio id="a13" data-start="12.0" data-duration="0.7" data-volume="0.8" src="assets/sfx/whoosh.wav"></audio>
+      <audio id="a14" data-start="13.6" data-duration="0.4" data-volume="0.6" src="assets/sfx/pin.wav"></audio>
+      <audio id="a15" data-start="14.3" data-duration="0.4" data-volume="0.6" src="assets/sfx/pin.wav"></audio>
+      <audio id="a16" data-start="15.0" data-duration="0.4" data-volume="0.6" src="assets/sfx/pin.wav"></audio>
+      <audio id="a17" data-start="15.9" data-duration="1.6" data-volume="0.5" src="assets/sfx/riser.wav"></audio>
+      <audio id="a18" data-start="17.55" data-duration="2.5" data-volume="0.8" src="assets/sfx/chime.wav"></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const pop = { ease: "back.out(1.6)", duration: 0.45 };
+
+      // S1: thread builds, then the camera drifts up as messages stack
+      const msgs = [["#m1", 0.2], ["#m2", 0.9], ["#m3", 1.7], ["#m4", 2.5], ["#m5", 4.0]];
+      msgs.forEach(([s, t]) => {
+        const out = document.querySelector(s).classList.contains("out");
+        tl.fromTo(s, { opacity: 0, y: 40, scale: 0.85, transformOrigin: out ? "100% 100%" : "0% 100%" },
+          { opacity: 1, y: 0, scale: 1, ...pop }, t);
+      });
+      tl
+        .set("#typ", { display: "flex" }, 3.1)
+        .fromTo("#typ", { opacity: 0, scale: 0.6, transformOrigin: "0% 100%" }, { opacity: 1, scale: 1, duration: 0.25 }, 3.1)
+        .to("#typ i", { y: -10, duration: 0.18, yoyo: true, repeat: 3, stagger: 0.09, ease: "sine.inOut" }, 3.2)
+        .set("#typ", { display: "none" }, 3.95);
+      tl.to("#thread", { y: -60, duration: 1.0, ease: "power3.inOut" }, 2.3)
+        .to("#thread", { y: -220, duration: 0.8, ease: "power3.inOut" }, 3.8)
+        .to("#m5 .hero", { scale: 1.06, duration: 0.25, yoyo: true, repeat: 1, ease: "sine.inOut" }, 4.6)
+        .to("#thread", { scale: 1.5, y: -520, duration: 1.1, ease: "power2.in" }, 5.2)
+        .fromTo("#wipe", { scale: 0 }, { scale: 30, duration: 0.7, ease: "power3.in" }, 5.75);
+
+      // S2: headline, then each card lands on a beat
+      tl.from("#s2h", { y: 80, opacity: 0, duration: 0.6, ease: "power3.out" }, 6.35);
+      ["#c1", "#c2", "#c3", "#c4", "#c5"].forEach((c, i) => {
+        const rot = [-5, 4, 3, -4, -2][i];
+        tl.fromTo(c, { y: -1400, rotation: rot * 4, opacity: 1 },
+          { y: 0, rotation: rot, duration: 0.5, ease: "power4.in" }, 6.5 + i * 0.55)
+          .to(c, { scale: 0.97, duration: 0.08, yoyo: true, repeat: 1 }, 7.0 + i * 0.55);
+      });
+      tl.to("#s2 .card, #s2h", { y: -2100, duration: 0.7, stagger: 0.04, ease: "power3.in" }, 11.8);
+
+      // S3: map drifts in, set marker, then routes and pins
+      tl.fromTo("#mapwrap", { scale: 1.35, rotation: -4 }, { scale: 1.05, rotation: 0, duration: 5.3, ease: "power2.out" }, 12.4)
+        .from("#s3h", { y: 60, opacity: 0, duration: 0.6, ease: "power3.out" }, 12.6)
+        .from("#set", { scale: 0, duration: 0.5, ease: "back.out(2)" }, 13.0)
+        .fromTo("#set .ring", { scale: 0.3, opacity: 1 }, { scale: 1.6, opacity: 0, duration: 1.2, repeat: 3, ease: "power1.out" }, 13.1);
+      [["#r1", "#p1"], ["#r2", "#p2"], ["#r3", "#p3"]].forEach(([r, p], i) => {
+        const t = 13.3 + i * 0.7, len = document.querySelector(r).getTotalLength();
+          tl.fromTo(r, { attr: { "stroke-dasharray": `0 ${len}` } }, { attr: { "stroke-dasharray": `${len} 0` }, duration: 0.3, ease: "power2.out" }, t)
+          .fromTo(p + " .dot", { y: -120, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "bounce.out" }, t + 0.25)
+          .fromTo(p + " .lab", { opacity: 0, x: p === "#p1" ? -20 : 20, scale: 0.9 }, { opacity: 1, x: 0, scale: 1, duration: 0.4, ease: "power3.out" }, t + 0.4);
+      });
+      tl.to("#s3 > *", { opacity: 0, duration: 0.4 }, 17.2)
+        .to("#s3", { backgroundColor: "#fff", duration: 0.4 }, 17.2);
+
+      // S4: mark draws, wordmark staggers, tagline lands
+      const arcLen = document.querySelector("#arc").getTotalLength();
+      tl.fromTo("#arc", { attr: { "stroke-dasharray": `0 ${arcLen}` } }, { attr: { "stroke-dasharray": `${arcLen} 0` }, duration: 0.6, ease: "power3.out" }, 17.55)
+        .from("#car", { x: -120, opacity: 0, duration: 0.6, ease: "power3.out" }, 17.75)
+        .from("#word span", { y: 50, opacity: 0, duration: 0.45, stagger: 0.04, ease: "power3.out" }, 17.95)
+        .from("#tag", { y: 30, opacity: 0, duration: 0.6, ease: "power3.out" }, 18.6)
+        .to("#bar", { width: 320, duration: 0.7, ease: "power3.inOut" }, 19.0);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
