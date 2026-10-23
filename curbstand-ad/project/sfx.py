@@ -42,4 +42,7 @@ for i in range(int(D/2.75)+1):
     for b in range(4):
         bs=s+int(b*.6875*SR); bt=tt[:int(.25*SR)]
         if bs+len(bt)<len(tt): x[bs:bs+len(bt)]+=np.sin(2*np.pi*np.cumsum(90*np.exp(-bt*20)+45)/SR)*np.exp(-bt*14)*.5
-save("bed",x*np.minimum(1,np.minimum(tt/1.0,(D-tt)/1.5)))
+duck=np.ones_like(tt)
+for a,b in [(5.6,6.3),(11.6,12.4),(15.9,17.2)]:
+    duck-=0.45*np.clip(np.minimum((tt-a+.15)/.15,(b+.3-tt)/.3),0,1)
+save("bed",x*duck*np.minimum(1,np.minimum(tt/1.0,(D-tt)/1.5)))
